@@ -3,14 +3,14 @@ from __future__ import annotations
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
-from .color_recipe import analyze_images
+from .color_recipe import analyze_images, list_example_cases
 
 
 app = FastAPI(title="Color Recipe API", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origin_regex=r"^http://(localhost|127\.0\.0\.1):517\d$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -22,11 +22,16 @@ def health() -> dict:
     return {"status": "ok"}
 
 
+@app.get("/api/examples")
+def examples() -> dict:
+    return {"cases": list_example_cases()}
+
+
 @app.post("/api/analyze")
 async def analyze(
     source: UploadFile = File(...),
     reference: UploadFile = File(...),
-    strength: float = Form(0.7),
+    strength: float = Form(0.55),
     lut_size: int = Form(17),
 ) -> dict:
     if not source.content_type or not source.content_type.startswith("image/"):
